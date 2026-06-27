@@ -1,0 +1,56 @@
+---
+import "../styles/global.css";
+import { getCollection } from "astro:content";
+
+interface Props {
+  title: string;
+  currentId?: string;
+}
+
+const { title, currentId } = Astro.props;
+const docs = (await getCollection("docs")).sort((a, b) =>
+  a.data.title.localeCompare(b.data.title),
+);
+---
+
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+  </head>
+  <body class="min-h-screen">
+    <div class="mx-auto flex max-w-5xl gap-8 px-4 py-8">
+      <aside class="w-48 shrink-0">
+        <nav>
+          <p class="mb-2 text-sm font-semibold text-gray-500">文档</p>
+          <ul class="space-y-1">
+            {
+              docs.map((entry) => (
+                <li>
+                  <a
+                    href={`/docs/${entry.id}`}
+                    class:list={[
+                      "block rounded px-2 py-1 text-sm",
+                      entry.id === currentId
+                        ? "bg-gray-900 text-white"
+                        : "text-gray-700 hover:bg-gray-100",
+                    ]}
+                  >
+                    {entry.data.title}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="min-w-0 flex-1 prose">
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
