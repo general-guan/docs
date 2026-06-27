@@ -22,8 +22,52 @@ const docs = (await getCollection("docs")).sort((a, b) =>
     <title>{title}</title>
   </head>
   <body class="min-h-screen">
+    <!-- 移动端顶栏（md 及以上隐藏） -->
+    <header
+      class="sticky top-0 z-30 flex items-center gap-3 border-b border-gray-200 bg-white px-4 py-3 md:hidden"
+    >
+      <button
+        id="menu-toggle"
+        type="button"
+        aria-label="打开导航菜单"
+        aria-expanded="false"
+        aria-controls="mobile-sidebar"
+        class="flex h-9 w-9 items-center justify-center rounded-md text-gray-700 hover:bg-gray-100"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="22"
+          height="22"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <span class="font-semibold text-gray-900">{title}</span>
+    </header>
+
+    <!-- 移动端遮罩（菜单打开时显示） -->
+    <div
+      id="menu-backdrop"
+      class="fixed inset-0 z-30 hidden bg-black/40 md:hidden"
+      aria-hidden="true"
+    >
+    </div>
+
     <div class="mx-auto flex max-w-5xl gap-8 px-4 py-8">
-      <aside class="w-48 shrink-0">
+      <!-- 侧边栏：桌面端常驻 / 移动端抽屉 -->
+      <aside
+        id="mobile-sidebar"
+        class="fixed inset-y-0 left-0 z-40 w-64 -translate-x-full transform bg-white px-4 py-6 transition-transform duration-200 ease-in-out md:static md:block md:translate-x-0 md:px-0 md:py-0 md:transition-none"
+      >
         <nav>
           <p class="mb-2 text-sm font-semibold text-gray-500">文档</p>
           <ul class="space-y-1">
@@ -32,6 +76,7 @@ const docs = (await getCollection("docs")).sort((a, b) =>
                 <li>
                   <a
                     href={`/docs/${entry.id}`}
+                    data-nav-link
                     class:list={[
                       "block rounded px-2 py-1 text-sm",
                       entry.id === currentId
@@ -52,5 +97,45 @@ const docs = (await getCollection("docs")).sort((a, b) =>
         <slot />
       </main>
     </div>
+
+    <script>
+      const toggle = document.getElementById("menu-toggle");
+      const sidebar = document.getElementById("mobile-sidebar");
+      const backdrop = document.getElementById("menu-backdrop");
+
+      function openMenu() {
+        sidebar?.classList.remove("-translate-x-full");
+        backdrop?.classList.remove("hidden");
+        toggle?.setAttribute("aria-expanded", "true");
+      }
+
+      function closeMenu() {
+        sidebar?.classList.add("-translate-x-full");
+        backdrop?.classList.add("hidden");
+        toggle?.setAttribute("aria-expanded", "false");
+      }
+
+      toggle?.addEventListener("click", () => {
+        const expanded = toggle.getAttribute("aria-expanded") === "true";
+        expanded ? closeMenu() : openMenu();
+      });
+
+      // 点击遮罩关闭
+      backdrop?.addEventListener("click", closeMenu);
+
+      // ESC 关闭
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeMenu();
+      });
+
+      // 点击导航项后关闭（移动端）
+      document.querySelectorAll("[data-nav-link]").forEach((link) => {
+        link.addEventListener("click", () => {
+          if (window.matchMedia("(max-width: 767px)").matches) {
+            closeMenu();
+          }
+        });
+      });
+    </script>
   </body>
 </html>
